@@ -169,7 +169,7 @@ async function openModal(index) {
   currentCardIndex = index;
   const card = filteredCards[currentCardIndex];
   cardInner.classList.remove("flipped");
-  modal.style.display = "block";
+  modal.style.display = "flex";
   modal.focus();
 
   try {
@@ -219,7 +219,7 @@ function updateNavButtons() {
 
 /** --- Keyboard shortcuts --- */
 document.addEventListener("keydown", (e) => {
-  if (modal.style.display === "block") {
+  if (modal.style.display === "flex") {
     if (e.key === "Escape") {
       closeModal();
     } else if (e.key === "ArrowLeft") {
