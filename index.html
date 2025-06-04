@@ -9,9 +9,9 @@
 <body>
   <header class="site-header">
     <img
-        src="assets/CardBuddiesLogoDesign.png"
-        alt="CardBuddies Logo"
-        class="logo"
+      src="assets/CardBuddiesLogoDesign.png"
+      alt="CardBuddies Logo"
+      class="logo"
     />
     <div class="controls">
       <input
@@ -31,29 +31,27 @@
 
   <div id="cardGrid" class="card-grid"></div>
 
-  <div id="loadingIndicator" style="display:none; text-align:center; padding: 10px;">Loading...</div>
-
   <div id="modal" class="modal" tabindex="0">
     <div class="modal-content">
       <div class="card-flip" onclick="toggleFlip()">
         <div class="card-inner" id="cardInner">
           <div class="card-front" id="cardFront"></div>
           <div class="card-back">
-            <img
-              src="https://images.pokemontcg.io/back.png"
-              alt="Card Back"
-            />
+            <img src="https://images.pokemontcg.io/back.png" alt="Card Back" />
           </div>
         </div>
       </div>
-
       <div id="priceContainer"></div>
-
       <div class="modal-controls">
         <button id="prevBtn" onclick="showPrevCard()">⬅️ Previous</button>
         <button id="nextBtn" onclick="showNextCard()">Next ➡️</button>
       </div>
     </div>
+  </div>
+
+  <div id="loadingBar">
+    <div id="progress"></div>
+    <div id="progressText">Loading: 0 / 17000 (0%)</div>
   </div>
 
   <script src="script.js"></script>
