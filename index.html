@@ -7,31 +7,15 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="sort-controls">
-    <label for="sortSelect">Sort by:</label>
-    <select id="sortSelect" onchange="applySort()">
-      <option value="name">Alphabetical (A–Z)</option>
-      <option value="number">Pokémon Number</option>
-    </select>
+  <h1>Pokémon Card Viewer</h1>
+  <div class="controls">
+    <button onclick="sortCards('name')">Sort A-Z</button>
+    <button onclick="sortCards('number')">Sort by Number</button>
+    <button onclick="previousCard()">◀ Previous</button>
+    <button onclick="nextCard()">Next ▶</button>
   </div>
-
-  <div id="cardGrid" class="card-grid"></div>
-
-  <div id="modal" class="modal">
-    <div class="modal-content">
-      <div class="card-flip">
-        <div class="card-inner" id="cardInner">
-          <div class="card-front" id="cardFront"></div>
-          <div class="card-back">
-            <img src="https://images.pokemontcg.io/back.png" alt="Card Back" />
-          </div>
-        </div>
-      </div>
-      <div class="modal-controls">
-        <button onclick="showPrevCard()">⬅️ Previous</button>
-        <button onclick="showNextCard()">Next ➡️</button>
-      </div>
-    </div>
+  <div class="card-container" id="cardContainer">
+    <p>Loading cards...</p>
   </div>
 
   <script src="script.js"></script>
