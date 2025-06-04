@@ -1,49 +1,108 @@
-let cards = [];
-let currentIndex = 0;
+const cardGrid = document.getElementById("cardGrid");
+const modal = document.getElementById("modal");
+const cardFront = document.getElementById("cardFront");
+const cardInner = document.getElementById("cardInner");
+const sortSelect = document.getElementById("sortSelect");
+
+let page = 1;
+const pageSize = 250;
+let isLoading = false;
+let hasMore = true;
+
+let allCards = [];
+let currentCardIndex = 0;
 
 async function fetchCards() {
-  const res = await fetch("https://api.pokemontcg.io/v2/cards?pageSize=100");
-  const data = await res.json();
-  cards = data.data;
-  showCard(currentIndex);
-}
+  if (isLoading || !hasMore) return;
+  isLoading = true;
 
-function showCard(index) {
-  const cardContainer = document.getElementById("cardContainer");
-  if (cards.length === 0) {
-    cardContainer.innerHTML = "<p>No cards loaded.</p>";
-    return;
-  }
+  try {
+    const res = await fetch(`https://api.pokemontcg.io/v2/cards?page=${page}&pageSize=${pageSize}`);
+    const data = await res.json();
 
-  const card = cards[index];
-  cardContainer.innerHTML = `
-    <img src="${card.images.large}" alt="${card.name}" />
-    <p><strong>${card.name}</strong> (#${card.number})</p>
-  `;
-}
+    if (data.data.length === 0) {
+      hasMore = false;
+      return;
+    }
 
-function nextCard() {
-  if (currentIndex < cards.length - 1) {
-    currentIndex++;
-    showCard(currentIndex);
+    allCards = allCards.concat(data.data);
+    applySort();
+    page++;
+  } catch (error) {
+    console.error("Failed to fetch cards:", error);
+  } finally {
+    isLoading = false;
   }
 }
 
-function previousCard() {
-  if (currentIndex > 0) {
-    currentIndex--;
-    showCard(currentIndex);
+function applySort() {
+  const sortValue = sortSelect.value;
+
+  if (sortValue === "name") {
+    allCards.sort((a, b) => a.name.localeCompare(b.name));
+  } else if (sortValue === "number") {
+    allCards.sort((a, b) => {
+      const numA = parseInt(a.nationalPokedexNumbers?.[0] || 0);
+      const numB = parseInt(b.nationalPokedexNumbers?.[0] || 0);
+      return numA - numB;
+    });
+  }
+
+  renderGrid(allCards);
+}
+
+function renderGrid(cards) {
+  cardGrid.innerHTML = "";
+  cards.forEach((card, index) => {
+    const img = document.createElement("img");
+    img.src = card.images.small;
+    img.alt = card.name;
+    img.onclick = () => openModal(index);
+    cardGrid.appendChild(img);
+  });
+}
+
+function openModal(index) {
+  currentCardIndex = index;
+  const card = allCards[currentCardIndex];
+  cardFront.innerHTML = `<img src="${card.images.large}" alt="${card.name}">`;
+  cardInner.classList.remove("flipped");
+  modal.style.display = "block";
+}
+
+function closeModal() {
+  modal.style.display = "none";
+}
+
+function showNextCard() {
+  if (currentCardIndex < allCards.length - 1) {
+    openModal(currentCardIndex + 1);
   }
 }
 
-function sortCards(by) {
-  if (by === "name") {
-    cards.sort((a, b) => a.name.localeCompare(b.name));
-  } else if (by === "number") {
-    cards.sort((a, b) => parseInt(a.number) - parseInt(b.number));
+function showPrevCard() {
+  if (currentCardIndex > 0) {
+    openModal(currentCardIndex - 1);
   }
-  currentIndex = 0;
-  showCard(currentIndex);
 }
+
+document.querySelector(".card-flip").addEventListener("click", () => {
+  cardInner.classList.toggle("flipped");
+});
+
+window.onclick = function(event) {
+  if (event.target == modal) {
+    closeModal();
+  }
+};
+
+window.addEventListener("scroll", () => {
+  if (
+    window.innerHeight + window.scrollY >= document.body.offsetHeight - 100 &&
+    !isLoading
+  ) {
+    fetchCards();
+  }
+});
 
 fetchCards();
