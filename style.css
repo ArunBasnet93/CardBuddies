@@ -37,16 +37,13 @@ body {
   min-width: 200px;
 }
 
-#sortSelect {
-  background-color: #fff;
-}
-
 .card-grid {
   padding: 20px;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 20px;
 }
+
 .card-grid img {
   width: 100%;
   border-radius: 10px;
@@ -71,7 +68,7 @@ body {
 }
 
 .modal-content {
-  background-color: #fefefe;
+  background-color: #d0f0fd;
   margin: 5% auto;
   padding: 20px;
   width: 90%;
@@ -154,7 +151,33 @@ body {
   cursor: not-allowed;
 }
 
-#loadingIndicator {
-  font-size: 18px;
-  color: #555;
+#loadingBar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: #eee;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+}
+
+#progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 30px;
+  background-color: #ffcb05;
+  width: 0%;
+  z-index: -1;
+  transition: width 0.3s ease;
+}
+
+#progressText {
+  position: relative;
+  z-index: 1;
 }
