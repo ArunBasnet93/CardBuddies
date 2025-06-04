@@ -17,6 +17,65 @@ let allCards = [];
 let filteredCards = [];
 let currentCardIndex = 0;
 
+/** --- IndexedDB Setup --- */
+const DB_NAME = 'CardImagesDB';
+const DB_VERSION = 1;
+const STORE_NAME = 'images';
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    request.onupgradeneeded = e => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME);
+      }
+    };
+    request.onsuccess = e => resolve(e.target.result);
+    request.onerror = e => reject(e.target.error);
+  });
+}
+
+async function getImageFromDB(key) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, 'readonly');
+    const store = tx.objectStore(STORE_NAME);
+    const request = store.get(key);
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function saveImageToDB(key, blob) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    const store = tx.objectStore(STORE_NAME);
+    const request = store.put(blob, key);
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function loadImageWithCache(url) {
+  try {
+    const cachedBlob = await getImageFromDB(url);
+    if (cachedBlob) {
+      return URL.createObjectURL(cachedBlob);
+    } else {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      await saveImageToDB(url, blob);
+      return URL.createObjectURL(blob);
+    }
+  } catch {
+    // fallback to direct URL if any error occurs
+    return url;
+  }
+}
+
+/** --- Data fetching --- */
 async function fetchCardsContinuously() {
   while (allCards.length < totalCards) {
     try {
@@ -71,28 +130,48 @@ function applyFilters() {
   renderGrid(filteredCards);
 }
 
-function renderGrid(cards) {
+async function renderGrid(cards) {
   cardGrid.innerHTML = "";
   if (cards.length === 0) {
     cardGrid.innerHTML = "<p>No Pokémon found.</p>";
     return;
   }
-  cards.forEach((card, index) => {
+
+  for (let i = 0; i < cards.length; i++) {
+    const card = cards[i];
     const img = document.createElement("img");
-    img.src = card.images?.small || "assets/fallback-image.png";
+    img.src = "assets/fallback-image.png";
     img.alt = card.name;
-    img.onclick = () => openModal(index);
+    img.style.cursor = "pointer";
+
+    loadImageWithCache(card.images?.small || "assets/fallback-image.png").then(
+      (blobUrl) => {
+        img.src = blobUrl;
+      }
+    ).catch(() => {
+      img.src = card.images?.small || "assets/fallback-image.png";
+    });
+
+    img.onclick = () => openModal(i);
     cardGrid.appendChild(img);
-  });
+  }
 }
 
-function openModal(index) {
+/** --- Modal Logic --- */
+
+async function openModal(index) {
   currentCardIndex = index;
   const card = filteredCards[currentCardIndex];
-  cardFront.innerHTML = `<img src="${card.images.large}" alt="${card.name}">`;
   cardInner.classList.remove("flipped");
   modal.style.display = "block";
   modal.focus();
+
+  try {
+    const blobUrl = await loadImageWithCache(card.images.large);
+    cardFront.innerHTML = `<img src="${blobUrl}" alt="${card.name}">`;
+  } catch {
+    cardFront.innerHTML = `<img src="${card.images.large}" alt="${card.name}">`;
+  }
 
   if (card.tcgplayer?.prices) {
     const prices = card.tcgplayer.prices;
@@ -108,12 +187,11 @@ function openModal(index) {
 
 function closeModal() {
   modal.style.display = "none";
+  cardFront.innerHTML = "";
 }
 
-function showNextCard() {
-  if (currentCardIndex < filteredCards.length - 1) {
-    openModal(currentCardIndex + 1);
-  }
+function toggleFlip() {
+  cardInner.classList.toggle("flipped");
 }
 
 function showPrevCard() {
@@ -122,25 +200,38 @@ function showPrevCard() {
   }
 }
 
+function showNextCard() {
+  if (currentCardIndex < filteredCards.length - 1) {
+    openModal(currentCardIndex + 1);
+  }
+}
+
 function updateNavButtons() {
-  prevBtn.disabled = currentCardIndex === 0;
-  nextBtn.disabled = currentCardIndex === filteredCards.length - 1;
+  prevBtn.disabled = currentCardIndex <= 0;
+  nextBtn.disabled = currentCardIndex >= filteredCards.length - 1;
 }
 
-function toggleFlip() {
-  cardInner.classList.toggle("flipped");
-}
-
-window.onclick = function (event) {
-  if (event.target == modal) closeModal();
-};
-
-window.addEventListener("keydown", e => {
+/** --- Keyboard shortcuts --- */
+document.addEventListener("keydown", (e) => {
   if (modal.style.display === "block") {
-    if (e.key === "ArrowRight") showNextCard();
-    else if (e.key === "ArrowLeft") showPrevCard();
-    else if (e.key === "Escape") closeModal();
+    if (e.key === "Escape") {
+      closeModal();
+    } else if (e.key === "ArrowLeft") {
+      showPrevCard();
+    } else if (e.key === "ArrowRight") {
+      showNextCard();
+    } else if (e.key.toLowerCase() === "f") {
+      toggleFlip();
+    }
   }
 });
 
+/** --- Close modal by clicking outside content --- */
+modal.addEventListener("click", (e) => {
+  if (e.target === modal) {
+    closeModal();
+  }
+});
+
+/** --- Start fetching --- */
 fetchCardsContinuously();
