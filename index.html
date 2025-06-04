@@ -31,7 +31,9 @@
 
   <div id="cardGrid" class="card-grid"></div>
 
-  <div id="modal" class="modal">
+  <div id="loadingIndicator" style="display:none; text-align:center; padding: 10px;">Loading...</div>
+
+  <div id="modal" class="modal" tabindex="0">
     <div class="modal-content">
       <div class="card-flip" onclick="toggleFlip()">
         <div class="card-inner" id="cardInner">
@@ -44,9 +46,12 @@
           </div>
         </div>
       </div>
+
+      <div id="priceContainer"></div>
+
       <div class="modal-controls">
-        <button onclick="showPrevCard()">⬅️ Previous</button>
-        <button onclick="showNextCard()">Next ➡️</button>
+        <button id="prevBtn" onclick="showPrevCard()">⬅️ Previous</button>
+        <button id="nextBtn" onclick="showNextCard()">Next ➡️</button>
       </div>
     </div>
   </div>
