@@ -94,7 +94,7 @@ function openModal(index) {
   cardInner.classList.remove("flipped");
   modal.style.display = "block";
   modal.focus();
-}
+
   // Show price if available
   if (card.tcgplayer && card.tcgplayer.prices) {
     const prices = card.tcgplayer.prices;
@@ -112,3 +112,68 @@ function openModal(index) {
   }
 
   updateNavButtons();
+}
+
+// Close modal
+function closeModal() {
+  modal.style.display = "none";
+}
+
+// Show next card in modal
+function showNextCard() {
+  if (currentCardIndex < filteredCards.length - 1) {
+    openModal(currentCardIndex + 1);
+  }
+}
+
+// Show previous card in modal
+function showPrevCard() {
+  if (currentCardIndex > 0) {
+    openModal(currentCardIndex - 1);
+  }
+}
+
+// Update previous/next button state
+function updateNavButtons() {
+  prevBtn.disabled = currentCardIndex === 0;
+  nextBtn.disabled = currentCardIndex === filteredCards.length - 1;
+}
+
+// Toggle flip on modal card
+function toggleFlip() {
+  cardInner.classList.toggle("flipped");
+}
+
+// Close modal when clicking outside the content
+window.onclick = function (event) {
+  if (event.target == modal) {
+    closeModal();
+  }
+};
+
+// Keyboard navigation in modal (optional)
+window.addEventListener("keydown", (e) => {
+  if (modal.style.display === "block") {
+    if (e.key === "ArrowRight") {
+      showNextCard();
+    } else if (e.key === "ArrowLeft") {
+      showPrevCard();
+    } else if (e.key === "Escape") {
+      closeModal();
+    }
+  }
+});
+
+// Infinite scroll fetch more cards
+window.addEventListener("scroll", () => {
+  if (
+    window.innerHeight + window.scrollY >= document.body.offsetHeight - 100 &&
+    !isLoading &&
+    hasMore
+  ) {
+    fetchCards();
+  }
+});
+
+// Initial fetch
+fetchCards();
