@@ -4,6 +4,7 @@ body {
   padding: 0;
   background-color: #d0f0fd;
   color: #333;
+  font-size: clamp(14px, 1.2vw, 16px);
 }
 
 .site-header {
@@ -37,6 +38,11 @@ body {
   min-width: 200px;
 }
 
+button:focus, input:focus, select:focus {
+  outline: 3px solid #ffcb05;
+  outline-offset: 2px;
+}
+
 .card-grid {
   padding: 20px;
   display: grid;
@@ -47,13 +53,15 @@ body {
 .card-grid img {
   width: 100%;
   border-radius: 10px;
-  transition: transform 0.3s, box-shadow 0.3s;
+  transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
   cursor: pointer;
+  border: 2px solid transparent;
 }
 
 .card-grid img:hover {
   transform: scale(1.05);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  border: 2px solid #ffcb05;
 }
 
 .modal {
@@ -65,11 +73,15 @@ body {
   width: 100%;
   height: 100%;
   background-color: rgba(0,0,0,0.7);
+
+  /* Flexbox centering */
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .modal-content {
   background-color: #d0f0fd;
-  margin: 5% auto;
   padding: 20px;
   width: 90%;
   max-width: 320px;
@@ -77,6 +89,7 @@ body {
   border-radius: 12px;
   box-shadow: 0 0 20px rgba(0,0,0,0.3);
   outline: none;
+  /* Removed margin for flex centering */
 }
 
 .card-flip {
@@ -174,7 +187,7 @@ body {
   background-color: #ffcb05;
   width: 0%;
   z-index: -1;
-  transition: width 0.3s ease;
+  transition: width 0.5s ease;
 }
 
 #progressText {
