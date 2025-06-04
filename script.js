@@ -4,6 +4,10 @@ const cardFront = document.getElementById("cardFront");
 const cardInner = document.getElementById("cardInner");
 const sortSelect = document.getElementById("sortSelect");
 const searchInput = document.getElementById("searchInput");
+const priceContainer = document.getElementById("priceContainer");
+const loadingIndicator = document.getElementById("loadingIndicator");
+const prevBtn = document.getElementById("prevBtn");
+const nextBtn = document.getElementById("nextBtn");
 
 let page = 1;
 const pageSize = 250;
@@ -18,6 +22,7 @@ let currentCardIndex = 0;
 async function fetchCards() {
   if (isLoading || !hasMore) return;
   isLoading = true;
+  loadingIndicator.style.display = "block";
 
   try {
     const res = await fetch(
@@ -25,7 +30,7 @@ async function fetchCards() {
     );
     const data = await res.json();
 
-    if (data.data.length === 0) {
+    if (!data.data || data.data.length === 0) {
       hasMore = false;
       return;
     }
@@ -37,6 +42,7 @@ async function fetchCards() {
     console.error("Failed to fetch cards:", error);
   } finally {
     isLoading = false;
+    loadingIndicator.style.display = "none";
   }
 }
 
@@ -67,65 +73,42 @@ function applyFilters() {
 // Render the cards grid
 function renderGrid(cards) {
   cardGrid.innerHTML = "";
+  if (cards.length === 0) {
+    cardGrid.innerHTML = "<p>No Pokémon found.</p>";
+    return;
+  }
   cards.forEach((card, index) => {
     const img = document.createElement("img");
-    img.src = card.images.small;
+    img.src = card.images?.small || "assets/fallback-image.png";
     img.alt = card.name;
     img.onclick = () => openModal(index);
     cardGrid.appendChild(img);
   });
 }
 
-// Open modal to show flipped card
+// Open modal to show flipped card and price
 function openModal(index) {
   currentCardIndex = index;
   const card = filteredCards[currentCardIndex];
   cardFront.innerHTML = `<img src="${card.images.large}" alt="${card.name}">`;
   cardInner.classList.remove("flipped");
   modal.style.display = "block";
+  modal.focus();
 }
+  // Show price if available
+  if (card.tcgplayer && card.tcgplayer.prices) {
+    const prices = card.tcgplayer.prices;
+    let price = null;
 
-// Close modal
-function closeModal() {
-  modal.style.display = "none";
-}
+    if (prices.normal && prices.normal.mid) {
+      price = prices.normal.mid;
+    } else if (prices.holofoil && prices.holofoil.mid) {
+      price = prices.holofoil.mid;
+    }
 
-// Show next card in modal
-function showNextCard() {
-  if (currentCardIndex < filteredCards.length - 1) {
-    openModal(currentCardIndex + 1);
+    priceContainer.textContent = price !== null ? `Price: $${price.toFixed(2)}` : "Price: N/A";
+  } else {
+    priceContainer.textContent = "Price: N/A";
   }
-}
 
-// Show previous card in modal
-function showPrevCard() {
-  if (currentCardIndex > 0) {
-    openModal(currentCardIndex - 1);
-  }
-}
-
-// Toggle flip on modal card
-function toggleFlip() {
-  cardInner.classList.toggle("flipped");
-}
-
-// Close modal when clicking outside the content
-window.onclick = function (event) {
-  if (event.target == modal) {
-    closeModal();
-  }
-};
-
-// Infinite scroll fetch more cards
-window.addEventListener("scroll", () => {
-  if (
-    window.innerHeight + window.scrollY >= document.body.offsetHeight - 100 &&
-    !isLoading &&
-    hasMore
-  ) {
-    fetchCards();
-  }
-});
-
-// Initial fetch
-fetchCards();
+  updateNavButtons();
