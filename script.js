@@ -77,7 +77,7 @@ async function loadImageWithCache(url) {
 
 /** --- Data fetching --- */
 async function fetchCardsContinuously() {
-  while (allCards.length < totalCards) {
+  while (true) {
     try {
       const res = await fetch(
         `https://api.pokemontcg.io/v2/cards?page=${page}&pageSize=${pageSize}`
@@ -86,9 +86,15 @@ async function fetchCardsContinuously() {
 
       if (!data.data || data.data.length === 0) break;
 
+      if (page === 1 && data.totalCount) {
+        totalCards = data.totalCount; // use actual count from API
+      }
+
       allCards = allCards.concat(data.data);
       applyFilters();
       updateProgressBar();
+
+      if (allCards.length >= totalCards) break;
 
       page++;
     } catch (err) {
